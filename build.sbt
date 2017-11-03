@@ -14,7 +14,7 @@ val projectVersion = "0.0.1"
 
 
 
-val projectMainClass = "thesis.Boot"
+val projectMainClass = "thesis.Test"
 
 def commonSettings = Seq(
   version := projectVersion,
@@ -48,7 +48,7 @@ lazy val frontend = (project in file("frontend"))
     ))
   .settings(skip in packageJSDependencies := false)
   .settings(
-    scalaJSUseMainModuleInitializer := true,
+    scalaJSUseMainModuleInitializer := false,
     libraryDependencies ++= Seq(
       "io.circe" %%% "circe-core" % "0.8.0",
       "io.circe" %%% "circe-generic" % "0.8.0",
