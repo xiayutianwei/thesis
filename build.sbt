@@ -14,7 +14,7 @@ val projectVersion = "0.0.1"
 
 
 
-val projectMainClass = "com.neo.sk.zhishiku.Boot"
+val projectMainClass = "thesis.Boot"
 
 def commonSettings = Seq(
   version := projectVersion,
