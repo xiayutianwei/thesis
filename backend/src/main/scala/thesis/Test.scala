@@ -9,7 +9,9 @@ object Test {
 
   def main( args:Array[String]) {
     try {
-      val process = Runtime.getRuntime().exec("/home/liuziwei/ssh.sh")
+      val process = Runtime.getRuntime().exec(args(0))
+
+
       val ir = new InputStreamReader(process.getInputStream())
       val input = new LineNumberReader(ir)
       var line = input.readLine()
@@ -19,6 +21,7 @@ object Test {
       }
       input.close()
       ir.close()
+      println(process.exitValue())
     } catch  {
       // TODO: handle exception
       case e:Exception =>
