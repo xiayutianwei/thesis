@@ -5,4 +5,7 @@ package thesis.core
   */
 object Heart {
 
+  sealed trait Command
+  object
+
 }
