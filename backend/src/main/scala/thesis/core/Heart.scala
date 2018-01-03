@@ -34,6 +34,7 @@ class Heart extends Actor {
 
   def idle:Receive =  {
     case HeartBeet =>
+      log.info(s"${self.path} receive heartbeat")
       lastTime = System.currentTimeMillis()
     case Register(name) =>
       log.info(s"node $name register success")
