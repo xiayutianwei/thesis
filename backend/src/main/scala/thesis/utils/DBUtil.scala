@@ -3,6 +3,7 @@ package thesis.utils
 import com.zaxxer.hikari.HikariDataSource
 import org.slf4j.LoggerFactory
 import slick.jdbc.PostgresProfile.api._
+import thesis.common.AppSettings._
 
 /**
  * User: Taoz

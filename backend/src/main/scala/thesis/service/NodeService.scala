@@ -28,6 +28,6 @@ trait NodeService extends BaseService{
   }
 
   val nodeRoutes = pathPrefix("node"){
-
+    subscribe
   }
 }

@@ -19,7 +19,6 @@ import scala.util.{Failure, Success}
   */
 object Boot extends HttpService{
 
-  import com.neo.sk.leader.common.AppSettings._
   import concurrent.duration._
 
 

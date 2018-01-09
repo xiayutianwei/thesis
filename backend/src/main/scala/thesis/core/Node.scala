@@ -7,9 +7,10 @@ import akka.stream.scaladsl._
 import akka.actor._
 import akka.stream.Supervision.Decider
 import org.slf4j._
-import io.circe.generic.auto._
-import io.circe.syntax._
+import thesis.Boot.materializer
 import thesis.core.Mission.Instruct
+import thesis.shared.shared.ErrorRsp
+import thesis.utils.CirceSupport
 /**
   * Created by liuziwei on 2017/12/26.
   */
@@ -41,9 +42,11 @@ object Node{
   }
 }
 
-class Node(name:String) extends Actor {
+class Node(name:String) extends Actor with CirceSupport{
 
   import Node._
+  import io.circe.generic.auto._
+  import io.circe.syntax._
 
 
   private val log = LoggerFactory.getLogger(this.getClass)
@@ -85,7 +88,7 @@ class Node(name:String) extends Actor {
             .map {
               rsp =>
                 log.debug(s"reply is $rsp \n ${rsp.asJson.noSpaces}")
-                TextMessage.Strict(rsp.asJson.noSpaces)
+                TextMessage.Strict(ErrorRsp(0,"").asJson.noSpaces)
             }.withAttributes(ActorAttributes.supervisionStrategy(decider))
 
 
