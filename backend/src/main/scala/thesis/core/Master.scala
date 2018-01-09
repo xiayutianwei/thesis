@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory
   * Created by liuziwei on 2017/12/26.
   */
 object Master {
-
+  def props = Props[Master](new Master)
 }
 
 class Master extends Actor {

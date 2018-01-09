@@ -1,6 +1,6 @@
 package thesis.service
 
-import akka.actor.{ActorSystem, Scheduler}
+import akka.actor.{ActorRef, ActorSystem, Scheduler}
 import akka.http.scaladsl.server
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{Directive, RequestContext}
@@ -8,6 +8,7 @@ import akka.stream.Materializer
 import akka.util.Timeout
 import io.circe.Json
 import org.slf4j.LoggerFactory
+import thesis.protocol.CommonErrorCode
 import thesis.utils.CirceSupport
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
@@ -19,12 +20,14 @@ import scala.util.{Failure, Success}
 trait BaseService extends CirceSupport{
 
   import io.circe.Error
+  import io.circe.generic.auto._
 
   implicit val system: ActorSystem
   implicit val executor: ExecutionContextExecutor
   implicit val materializer: Materializer
   implicit val timeout: Timeout
   implicit val scheduler: Scheduler
+  val masterService:ActorRef
 
 //  val postPreProcessingActor:ActorRef[PostPreProcessingActor.Command]
 
@@ -38,7 +41,7 @@ trait BaseService extends CirceSupport{
       case Failure(e) =>
         e.printStackTrace()
         log.warn(s"internal error: ${e.getMessage}")
-        complete(CommonErrorCode.internalError(e.getMessage))
+        complete(CommonErrorCode.InternalError(e.getMessage))
     }
   }
 

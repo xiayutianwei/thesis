@@ -6,5 +6,7 @@ public class Test {
 
     public static void main(String[] args){
         Map<Integer,Integer> a=new TreeMap<Integer,Integer>();
+        String s = "";
+        s.matches("");
     }
 }

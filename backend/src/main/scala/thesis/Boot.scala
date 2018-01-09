@@ -8,13 +8,16 @@ import akka.routing.RoundRobinPool
 import akka.stream.ActorMaterializer
 import akka.typed.scaladsl.adapter.PropsAdapter
 import akka.util.Timeout
+import thesis.service.HttpService
+import common.AppSettings._
+import thesis.core.Master
 
 import scala.util.{Failure, Success}
 
 /**
   * Created by liuziwei on 2018/1/3.
   */
-object Boot {
+object Boot extends HttpService{
 
   import com.neo.sk.leader.common.AppSettings._
   import concurrent.duration._
@@ -30,9 +33,7 @@ object Boot {
   override implicit val scheduler = system.scheduler
   override implicit val timeout = Timeout(60 seconds) // for actor asks
 
-  lazy val dataStoreRouter = system.actorOf(RoundRobinPool(15).props(PropsAdapter.apply(DataStoreActor.init())), "DataStoreRouter")
-
-  lazy val postPreProcessingRouter = system.actorOf(RoundRobinPool(15).props(PropsAdapter.apply(PostPreProcessingActor.create())), "postPreProcessingRouter")
+  override val masterService = system.actorOf(Master.props)
 
 
   val log: LoggingAdapter = Logging(system, getClass)
