@@ -19,11 +19,11 @@ object MySlickCodeGenerator {
 
   val slickDriver = "slick.jdbc.PostgresProfile"
   val jdbcDriver = "org.postgresql.Driver"
-  val url = "jdbc:postgresql://10.1.29.247:5432/leader"
+  val url = "jdbc:postgresql://10.1.29.247:5432/lzw_bs"
   val outputFolder = "target/gencode/genTablesPsql"
-  val pkg = "com.neo.sk.leader.models"
-  val user = "leader"
-  val password = "LeaderSK30"
+  val pkg = "thesis.models.tables"
+  val user = "lzw_bs"
+  val password = "1qaz@WSX"
 
 
 
