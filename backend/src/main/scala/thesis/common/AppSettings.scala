@@ -38,6 +38,10 @@ object AppSettings {
   val httpInterface = appConfig.getString("http.interface")
   val httpPort = appConfig.getInt("http.port")
 
+  val pathConfig = appConfig.getConfig("path")
+  val dataSetPath = pathConfig.getString("dataSet")
+  val modelPath = pathConfig.getString("model")
+  val resultPath = pathConfig.getString("result")
 
   val slickConfig = config.getConfig("slick.db")
   val slickUrl = slickConfig.getString("url")
