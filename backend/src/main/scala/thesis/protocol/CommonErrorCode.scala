@@ -8,4 +8,5 @@ import thesis.shared.shared.ErrorRsp
 object CommonErrorCode {
 
   def InternalError(msg:String) = ErrorRsp(100001,msg)
+  def ParseJsonError = ErrorRsp(100002,"parse request json error")
 }
