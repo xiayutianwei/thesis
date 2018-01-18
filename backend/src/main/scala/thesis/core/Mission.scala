@@ -3,6 +3,8 @@ package thesis.core
 import akka.actor.Actor.Receive
 import akka.actor._
 import org.slf4j._
+
+import scala.collection.mutable
 /**
   * Created by liuziwei on 2017/12/26.
   */
@@ -14,7 +16,7 @@ object Mission {
   def props = Props[Mission](new Mission)
 }
 
-class Mission extends Actor {
+class Mission extends Actor with Stash{
 
   import Mission._
 
@@ -40,4 +42,5 @@ class Mission extends Actor {
       log.error(s"${child.path} dead...")
       context.become(idle)
   }
+
 }

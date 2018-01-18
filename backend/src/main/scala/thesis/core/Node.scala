@@ -18,6 +18,12 @@ object Node{
   sealed trait Command extends Heart.Command
   case class Register(name:String) extends Command
   case class RegisterRst(flow:Flow[Message, Message, Any])
+  case object GetNodeState extends Command
+  case object GetNodeDataCache extends Command
+  case object GetNodeAllInfo extends Command
+  case class NodeStateRst(node:String,state:Boolean)
+  case class NodeDataCacheRst(node:String,cache:Set[Long])
+  case class NodeAllInfoRst(node:String,state:Boolean,cache:Set[Long])
   def props(name:String) = Props[Node](new Node(name))
   private def playInSink(actor: ActorRef) = Sink.actorRef[Heart.Command](actor, "stop")
   def getFlow(heart: ActorRef,mission:ActorRef): Flow[String, Instruct, Any] = {
