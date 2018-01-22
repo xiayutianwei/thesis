@@ -59,7 +59,7 @@ class Master extends Actor with Stash{
       }else{
         process(req).onComplete{
           case Success(nodeOpt) =>
-            if(nodeOpt.isDefined) getChild(nodeOpt.get) ! RunMission(id,req) //TODO 通知节点进行任务
+            if(nodeOpt.isDefined) getChild(nodeOpt.get) ! RunMission(id,req)
             else waitMission.enqueue(r)
             self ! SwitchState(idle)
           case Failure(e) =>
@@ -73,7 +73,7 @@ class Master extends Actor with Stash{
     case r@ReleaseMission(req) =>
       process(req.req).onComplete{
         case Success(nodeOpt) =>
-          if(nodeOpt.isDefined){} //TODO 通知节点进行任务
+          if(nodeOpt.isDefined) getChild(nodeOpt.get) ! RunMission(req.id,req.req)
           else {
             log.error("release mission didn't find free node")
             context.system.scheduler.scheduleOnce(5 minute,self,r)

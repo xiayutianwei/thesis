@@ -109,5 +109,8 @@ class Node(name:String) extends Actor with CirceSupport{
 
 
         sender() ! RegisterRst(flow)
+
+      case RunMission(id,req) =>
+
   }
 }
