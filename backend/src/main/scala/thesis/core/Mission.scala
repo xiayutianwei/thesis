@@ -12,6 +12,7 @@ object Mission {
   case class Register(outActor:ActorRef)
   sealed trait Instruct
   case class Mission111(msg:String) extends Instruct
+  case class Feedback(msg:String) extends Instruct
 
   def props = Props[Mission](new Mission)
 }

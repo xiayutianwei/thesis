@@ -1,7 +1,8 @@
 package thesis.core
 
+import akka.Done
 import akka.actor.Actor.Receive
-import akka.http.scaladsl.model.ws.{Message, TextMessage}
+import akka.http.scaladsl.model.ws.{BinaryMessage, Message, TextMessage}
 import akka.stream.{ActorAttributes, OverflowStrategy, Supervision}
 import akka.stream.scaladsl._
 import akka.actor._
@@ -9,12 +10,14 @@ import akka.stream.Supervision.Decider
 import org.slf4j._
 import thesis.Boot.materializer
 import thesis.core.Mission.Instruct
+import thesis.shared.ptcl.APIProtocol.SubmitMissionReq
 import thesis.shared.shared.ErrorRsp
 import thesis.utils.CirceSupport
 /**
   * Created by liuziwei on 2017/12/26.
   */
 object Node{
+  private val log = LoggerFactory.getLogger(this.getClass)
   sealed trait Command extends Heart.Command
   case class Register(name:String) extends Command
   case class RegisterRst(flow:Flow[Message, Message, Any])
@@ -24,15 +27,22 @@ object Node{
   case class NodeStateRst(node:String,state:Boolean)
   case class NodeDataCacheRst(node:String,cache:Set[Long])
   case class NodeAllInfoRst(node:String,state:Boolean,cache:Set[Long])
+  case class RunMission(id:Long,req:SubmitMissionReq) extends Command
   def props(name:String) = Props[Node](new Node(name))
-  private def playInSink(actor: ActorRef) = Sink.actorRef[Heart.Command](actor, "stop")
-  def getFlow(heart: ActorRef,mission:ActorRef): Flow[String, Instruct, Any] = {
-    val in =
-      Flow[String]
-        .map { s =>
-          Heart.HeartBeet
-        }
-        .to(playInSink(heart))
+  private def playInSink(actor: ActorRef) = Sink.actorRef[Heart.Command](actor, Done)
+  def getFlow(name:String,heart: ActorRef,mission:ActorRef): Flow[String, Instruct, Any] = {
+    val tmpReceiver = thesis.Boot.system.actorOf(Props(new Actor {
+      override def receive: Receive = {
+          case "heart beat" => heart ! Heart.HeartBeet
+          case "stop" =>
+            log.info(s"$name tmpReceiver got stop, stop myself.")
+            context.stop(self)
+          case m:String => mission ! Mission.Feedback(m)
+          case a =>
+            log.info(s"$name tmpReceive got unknown msg $a, ignore it")
+      }
+    }))
+    val in = Sink.actorRef[String](tmpReceiver,"stop")
 
     val out =
       Source.actorRef[Instruct](3, OverflowStrategy.dropHead)
@@ -67,9 +77,9 @@ class Node(name:String) extends Actor with CirceSupport{
     context.child(symbol).getOrElse{
       symbol match{
         case Symbol.Heart =>
-          context.actorOf(Heart.props)
+          context.actorOf(Heart.props,"heart")
         case Symbol.Mission =>
-          context.actorOf(Mission.props)
+          context.actorOf(Mission.props,"mission")
       }
     }
   }
@@ -90,7 +100,7 @@ class Node(name:String) extends Actor with CirceSupport{
                 log.debug(s"msg from webSocket: $m")
                 m
             }
-            .via(getFlow(getChild(Symbol.Heart),getChild(Symbol.Mission)))
+            .via(getFlow(name,getChild(Symbol.Heart),getChild(Symbol.Mission)))
             .map {
               rsp =>
                 log.debug(s"reply is $rsp \n ${rsp.asJson.noSpaces}")

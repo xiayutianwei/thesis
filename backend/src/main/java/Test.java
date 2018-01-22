@@ -8,5 +8,7 @@ public class Test {
         Set<String> set = new HashSet<String>();
         HashMap<Integer,Integer> map = new HashMap<Integer,Integer>();
         String a="";
+        List<String> list = new ArrayList<>();
+
     }
 }
