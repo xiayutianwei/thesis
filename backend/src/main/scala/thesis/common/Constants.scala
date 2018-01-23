@@ -5,18 +5,12 @@ package thesis.common
   */
 object Constants {
 
-  object PostClassifyType{
-    final val notClassify = -1
-    final val zhichang = 0
-    final val fangchan = 1
-    final val gushi = 2
-    final val qiche = 3
-    final val hunnian = 4
-    final val yangmao = 5
-    final val yule = 6
-    final val haizi = 7
-    final val shuma = 8
-    final val jishu = 9
+
+  object MissionState{
+    final val Fail = -1
+    final val Wait = 0
+    final val Run = 1
+    final val Finish = 2
   }
 
 

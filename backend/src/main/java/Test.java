@@ -9,6 +9,7 @@ public class Test {
         HashMap<Integer,Integer> map = new HashMap<Integer,Integer>();
         String a="";
         List<String> list = new ArrayList<>();
-
+        list.add("\"\"");
+        System.out.print(list);
     }
 }

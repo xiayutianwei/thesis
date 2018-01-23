@@ -27,7 +27,6 @@ object Node{
   case class NodeStateRst(node:String,state:Boolean)
   case class NodeDataCacheRst(node:String,cache:Set[Long])
   case class NodeAllInfoRst(node:String,state:Boolean,cache:Set[Long])
-  case class RunMission(id:Long,req:SubmitMissionReq) extends Command
   def props(name:String) = Props[Node](new Node(name))
   private def playInSink(actor: ActorRef) = Sink.actorRef[Heart.Command](actor, Done)
   def getFlow(name:String,heart: ActorRef,mission:ActorRef): Flow[String, Instruct, Any] = {
@@ -61,6 +60,7 @@ object Node{
 class Node(name:String) extends Actor with CirceSupport{
 
   import Node._
+  import Mission.AllotMission
   import io.circe.generic.auto._
   import io.circe.syntax._
 
@@ -79,7 +79,7 @@ class Node(name:String) extends Actor with CirceSupport{
         case Symbol.Heart =>
           context.actorOf(Heart.props,"heart")
         case Symbol.Mission =>
-          context.actorOf(Mission.props,"mission")
+          context.actorOf(Mission.props(name),"mission")
       }
     }
   }
@@ -110,7 +110,7 @@ class Node(name:String) extends Actor with CirceSupport{
 
         sender() ! RegisterRst(flow)
 
-      case RunMission(id,req) =>
-
+      case AllotMission(id,req,1) =>
+        getChild(Symbol.Mission) ! AllotMission
   }
 }

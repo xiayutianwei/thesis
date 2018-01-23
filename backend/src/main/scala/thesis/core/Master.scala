@@ -3,7 +3,7 @@ package thesis.core
 import akka.actor.Actor.Receive
 import akka.actor._
 import org.slf4j.LoggerFactory
-import thesis.core.Node.{GetNodeAllInfo, NodeAllInfoRst, RunMission}
+import thesis.core.Node.{GetNodeAllInfo, NodeAllInfoRst}
 import thesis.shared.ptcl.APIProtocol.SubmitMissionReq
 import akka.pattern.ask
 import thesis.Boot.executor
@@ -29,6 +29,7 @@ class Master extends Actor with Stash{
 
   import Master._
   import Node.Register
+  import Mission.AllotMission
 
   implicit val timeout = Timeout(5.second)
 
@@ -59,7 +60,7 @@ class Master extends Actor with Stash{
       }else{
         process(req).onComplete{
           case Success(nodeOpt) =>
-            if(nodeOpt.isDefined) getChild(nodeOpt.get) ! RunMission(id,req)
+            if(nodeOpt.isDefined) getChild(nodeOpt.get) ! AllotMission(id,req,1)
             else waitMission.enqueue(r)
             self ! SwitchState(idle)
           case Failure(e) =>
@@ -73,7 +74,7 @@ class Master extends Actor with Stash{
     case r@ReleaseMission(req) =>
       process(req.req).onComplete{
         case Success(nodeOpt) =>
-          if(nodeOpt.isDefined) getChild(nodeOpt.get) ! RunMission(req.id,req.req)
+          if(nodeOpt.isDefined) getChild(nodeOpt.get) ! AllotMission(req.id,req.req,1)
           else {
             log.error("release mission didn't find free node")
             context.system.scheduler.scheduleOnce(5 minute,self,r)
