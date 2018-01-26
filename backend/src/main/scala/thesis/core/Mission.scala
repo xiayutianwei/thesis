@@ -6,7 +6,7 @@ import akka.http.scaladsl.model.ws.TextMessage
 import org.slf4j._
 import thesis.models.dao.MissionDAO
 import thesis.shared.ptcl.APIProtocol.SubmitMissionReq
-
+import thesis.Boot.executor
 import scala.util.{Failure, Success}
 import scala.collection.mutable
 import scala.concurrent.duration._

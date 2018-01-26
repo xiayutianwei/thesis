@@ -6,6 +6,7 @@ import thesis.Boot.executor
 import slick.jdbc.PostgresProfile.api._
 import thesis.common.Constants.MissionState
 import thesis.shared.ptcl.APIProtocol.SubmitMissionReq
+import slick.dbio.SequenceAction
 /**
   * Created by liuziwei on 2018/1/22.
   */
@@ -25,4 +26,6 @@ object MissionDAO {
   def change2FailState(id:Long) = db.run(
     tMission.filter(_.id === id).map(_.status).update(MissionState.Fail)
   )
+
+
 }
