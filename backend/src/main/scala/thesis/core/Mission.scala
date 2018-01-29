@@ -7,6 +7,9 @@ import org.slf4j._
 import thesis.models.dao.MissionDAO
 import thesis.shared.ptcl.APIProtocol.SubmitMissionReq
 import thesis.Boot.executor
+import thesis.core.Master.{MissionDone, MissionInfo}
+import thesis.core.Node.{AddDataSet, RemoveDataSet}
+
 import scala.util.{Failure, Success}
 import scala.collection.mutable
 import scala.concurrent.duration._
@@ -18,8 +21,9 @@ object Mission {
   case class SwitchState(state:Receive)
   sealed trait Instruct
   case class Feedback(msg:String) extends Instruct
-  case class RunMission(id:Long,req:SubmitMissionReq) extends Instruct
-  case class AllotMission(id:Long,req:SubmitMissionReq,retryTimes:Int) extends Instruct
+  case class RunMission(id:Long,req:MissionInfo) extends Instruct
+  case class AllotMission(id:Long, req:MissionInfo, retryTimes:Int) extends Instruct
+  case class AllotMissionFail(id:Long) extends Instruct
   case class StopMission(id:Long) extends Instruct //TODO 处理停止任务
 
   def props(name:String) = Props[Mission](new Mission(name))
@@ -28,12 +32,12 @@ object Mission {
 class Mission(name:String) extends Actor with Stash{
 
   import Mission._
+  import io.circe.generic.auto._
+  import io.circe.Json._
+  import io.circe.syntax._
 
   private val log = LoggerFactory.getLogger(this.getClass)
-  private val subMissionFinish = new mutable.HashMap[String,Boolean]()
-  subMissionFinish.put("field",false)
-  subMissionFinish.put("data",false)
-  subMissionFinish.put("model",false)
+  private val allotMission = new mutable.HashMap[Long,Cancellable]()
 
 
 
@@ -76,10 +80,24 @@ class Mission(name:String) extends Actor with Stash{
         context.become(busy)
       }
 
-    case RunMission(id,req) =>
-      outer ! TextMessage.Strict("")
+    case r@RunMission(id,req) =>
+      val a = context.system.scheduler.scheduleOnce(5 second,self,AllotMissionFail(id))
+      allotMission.put(id,a)
+      outer ! r
 
     case Feedback(m) =>
+      m.substring(0,4) match{
+        case "0001" => context.parent ! MissionDone(m.substring(5).toLong)
+        case "0002" => context.parent ! RemoveDataSet(m.substring(5).toLong)
+        case "0003" =>
+          if(allotMission.contains(m.substring(5).toLong)) allotMission(m.substring(5).toLong).cancel()
+        case "0004" => context.parent ! AddDataSet(m.substring(5).toLong)
+        case "0005" => context.parent ! RemoveDataSet(m.substring(5).toLong)
+      }
+
+    case AllotMissionFail(id) =>
+      log.debug(s"allot mission $id on node $name fail")
+      context.parent ! AllotMissionFail(id)
 
     case Terminated(child) =>
       log.error(s"${child.path} dead...")

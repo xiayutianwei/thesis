@@ -8,6 +8,9 @@ import thesis.shared.ptcl.APIProtocol.SubmitMissionReq
 import akka.pattern.ask
 import thesis.Boot.executor
 import akka.util.Timeout
+import thesis.core.Mission.AllotMissionFail
+import thesis.models.tables.SlickTables
+
 import scala.collection.mutable
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -18,9 +21,10 @@ import scala.util.{Failure, Success}
 object Master {
   def props = Props[Master](new Master)
 
+  case class MissionInfo(field:SlickTables.rMasterField,model:SlickTables.rMasterModel,dataSet:SlickTables.rMasterDataSet)
   sealed trait Command
   case class SwitchState(state: Receive) extends Command
-  case class SubmitMission(id:Long,req: SubmitMissionReq) extends Command
+  case class SubmitMission(id:Long,req: MissionInfo) extends Command
   case class MissionDone(id:Long) extends Command
   case class ReleaseMission(req:SubmitMission) extends Command
 }
@@ -35,6 +39,7 @@ class Master extends Actor with Stash{
 
   private val log = LoggerFactory.getLogger(this.getClass)
 
+  private val missionMap = new mutable.HashMap[Long,MissionInfo]()
   private val waitMission = new mutable.Queue[SubmitMission]()
   private val runMission = new mutable.HashMap[String,(Long,Long,Long)]() // node => missionId startTime predictTime
   def getChild(name:String) = {
@@ -55,6 +60,7 @@ class Master extends Actor with Stash{
       getChild(name).forward(r)
 
     case r@SubmitMission(id,req) =>
+      missionMap.put(id,req)
       if(waitMission.nonEmpty){
         waitMission.enqueue(r)
       }else{
@@ -87,6 +93,10 @@ class Master extends Actor with Stash{
       }
       context.become(work)
 
+    case AllotMissionFail(id) =>
+      log.debug(s"allot mission $id fail,re allot")
+      if(missionMap.contains(id)) self ! ReleaseMission(SubmitMission(id,missionMap(id)))
+
     case MissionDone(id) =>
       log.info(s"mission id $id done")
       if(waitMission.nonEmpty){
@@ -108,11 +118,11 @@ class Master extends Actor with Stash{
 
   }
 
-  def process(req:SubmitMissionReq) = {
+  def process(req:MissionInfo) = {
     val nodeInfoF = context.children.toList.map{child =>
       (child ? GetNodeAllInfo).map{
         case NodeAllInfoRst(node,state,cache) =>
-          (node,state,cache.contains(req.dataSetId))
+          (node,state,cache.contains(req.dataSet.id))
         case _ =>
           ("",false,false)
       }.recover{
@@ -129,7 +139,7 @@ class Master extends Actor with Stash{
         Some(exist.get._1)
       }else{
         val runKeys = runMission.keySet
-        val freeNode = onlineNode.find(i => runKeys.contains(i._1))
+        val freeNode = onlineNode.find(i => !runKeys.contains(i._1))
         if(freeNode.isDefined) Some(freeNode.get._1)
         else None
       }

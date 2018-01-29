@@ -14,6 +14,9 @@ import slick.dbio.SequenceAction
 object MissionDAO {
 
   private val tMission = SlickTables.tMasterMission
+  private val tDataSet = SlickTables.tMasterDataSet
+  private val tModel = SlickTables.tMasterModel
+  private val tField = SlickTables.tMasterField
 
   def insert(req:SubmitMissionReq) = db.run(
     tMission.returning(tMission.map(_.id)) += SlickTables.rMasterMission(-1l,req.dataSetId,req.modelId,System.currentTimeMillis(),0,"","",req.fieldId)
@@ -26,6 +29,17 @@ object MissionDAO {
   def change2FailState(id:Long) = db.run(
     tMission.filter(_.id === id).map(_.status).update(MissionState.Fail)
   )
+
+  def getMissionInfo(req:SubmitMissionReq) = {
+    val query = for{
+      d <- tDataSet.filter(_.id === req.dataSetId).result.headOption
+      m <- tModel.filter(_.id === req.modelId).result.headOption
+      f <- tField.filter(_.id === req.fieldId).result.headOption
+    }yield{
+      (f,m,d)
+    }
+    db.run(query)
+  }
 
 
 }

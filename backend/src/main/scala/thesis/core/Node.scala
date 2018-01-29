@@ -9,7 +9,8 @@ import akka.actor._
 import akka.stream.Supervision.Decider
 import org.slf4j._
 import thesis.Boot.materializer
-import thesis.core.Mission.Instruct
+import thesis.core.Master.MissionDone
+import thesis.core.Mission.{AllotMissionFail, Instruct}
 import thesis.shared.ptcl.APIProtocol.SubmitMissionReq
 import thesis.shared.shared.ErrorRsp
 import thesis.utils.CirceSupport
@@ -20,6 +21,7 @@ object Node{
   private val log = LoggerFactory.getLogger(this.getClass)
   sealed trait Command extends Heart.Command
   case class Register(name:String) extends Command
+  case object Disconnected extends Command
   case class RegisterRst(flow:Flow[Message, Message, Any])
   case object GetNodeState extends Command
   case object GetNodeDataCache extends Command
@@ -27,6 +29,8 @@ object Node{
   case class NodeStateRst(node:String,state:Boolean)
   case class NodeDataCacheRst(node:String,cache:Set[Long])
   case class NodeAllInfoRst(node:String,state:Boolean,cache:Set[Long])
+  case class RemoveDataSet(id:Long) extends Command
+  case class AddDataSet(id:Long) extends Command
   def props(name:String) = Props[Node](new Node(name))
   private def playInSink(actor: ActorRef) = Sink.actorRef[Heart.Command](actor, Done)
   def getFlow(name:String,heart: ActorRef,mission:ActorRef): Flow[String, Instruct, Any] = {
@@ -35,6 +39,7 @@ object Node{
           case "heart beat" => heart ! Heart.HeartBeet
           case "stop" =>
             log.info(s"$name tmpReceiver got stop, stop myself.")
+            context.self ! Disconnected
             context.stop(self)
           case m:String => mission ! Mission.Feedback(m)
           case a =>
@@ -66,6 +71,8 @@ class Node(name:String) extends Actor with CirceSupport{
 
 
   private val log = LoggerFactory.getLogger(this.getClass)
+  private var state = false
+  private val cache = new collection.mutable.HashSet[Long]()
   private val decider: Decider = {
     e: Throwable =>
       e.printStackTrace()
@@ -93,6 +100,7 @@ class Node(name:String) extends Actor with CirceSupport{
 
   def idle:Receive = {
       case Register(_) =>
+        state = true
         val flow: Flow[Message, Message, Any] =
           Flow[Message]
             .collect {
@@ -104,13 +112,36 @@ class Node(name:String) extends Actor with CirceSupport{
             .map {
               rsp =>
                 log.debug(s"reply is $rsp \n ${rsp.asJson.noSpaces}")
-                TextMessage.Strict(ErrorRsp(0,"").asJson.noSpaces)
+                TextMessage.Strict(rsp.asJson.noSpaces)
             }.withAttributes(ActorAttributes.supervisionStrategy(decider))
 
 
         sender() ! RegisterRst(flow)
 
-      case AllotMission(id,req,1) =>
-        getChild(Symbol.Mission) ! AllotMission
+      case r@AllotMission(id,req,1) =>
+        log.info(s"allot mission $id on node $name")
+        getChild(Symbol.Mission) ! r
+
+      case r@AllotMissionFail(id) =>
+        context.parent ! r
+
+      case AddDataSet(id) =>
+        cache.add(id)
+
+      case RemoveDataSet(id) =>
+        cache.remove(id)
+
+      case r@MissionDone(_) =>
+        context.parent ! r
+      case Disconnected =>
+        state = false
+
+      case GetNodeAllInfo =>
+        sender() ! NodeAllInfoRst(name,state,cache.toSet)
+      case GetNodeDataCache =>
+        sender() ! NodeDataCacheRst(name,cache.toSet)
+      case GetNodeState =>
+        sender() ! NodeStateRst(name,state)
+
   }
 }

@@ -5,6 +5,7 @@ import akka.actor._
 import org.slf4j._
 
 import scala.collection.mutable
+import scala.concurrent.duration.Duration
 /**
   * Created by liuziwei on 2017/12/26.
   */

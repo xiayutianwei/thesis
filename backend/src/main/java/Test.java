@@ -13,6 +13,8 @@ public class Test {
         System.out.println(s.lower(4));
         m.floorKey(0);
         a.forEach((String s1) -> System.out.print(s));
+        int[] aaa=  {1,2,3};
+        Queue<Integer> q = new PriorityQueue<>();
     }
     public static int getResult(int n) {
         // write code here
