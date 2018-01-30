@@ -25,19 +25,20 @@ trait SlickTables {
     *  @param size Database column size SqlType(float8), Default(0.0)
     *  @param amount Database column amount SqlType(int4), Default(0)
     *  @param `type` Database column type SqlType(int4), Default(0)
-    *  @param fieldId Database column field_id SqlType(int8), Default(0) */
-  final case class rMasterDataSet(id: Long, name: String = "", path: String = "", size: Double = 0.0, amount: Int = 0, `type`: Int = 0, fieldId: Long = 0L)
+    *  @param fieldId Database column field_id SqlType(int8), Default(0)
+    *  @param privatePath Database column private_path SqlType(text), Default() */
+  final case class rMasterDataSet(id: Long, name: String = "", path: String = "", size: Double = 0.0, amount: Int = 0, `type`: Int = 0, fieldId: Long = 0L, privatePath: String = "")
   /** GetResult implicit for fetching rMasterDataSet objects using plain SQL queries */
   implicit def GetResultrMasterDataSet(implicit e0: GR[Long], e1: GR[String], e2: GR[Double], e3: GR[Int]): GR[rMasterDataSet] = GR{
     prs => import prs._
-      rMasterDataSet.tupled((<<[Long], <<[String], <<[String], <<[Double], <<[Int], <<[Int], <<[Long]))
+      rMasterDataSet.tupled((<<[Long], <<[String], <<[String], <<[Double], <<[Int], <<[Int], <<[Long], <<[String]))
   }
   /** Table description of table master_data_set. Objects of this class serve as prototypes for rows in queries.
     *  NOTE: The following names collided with Scala keywords and were escaped: type */
   class tMasterDataSet(_tableTag: Tag) extends profile.api.Table[rMasterDataSet](_tableTag, "master_data_set") {
-    def * = (id, name, path, size, amount, `type`, fieldId) <> (rMasterDataSet.tupled, rMasterDataSet.unapply)
+    def * = (id, name, path, size, amount, `type`, fieldId, privatePath) <> (rMasterDataSet.tupled, rMasterDataSet.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = (Rep.Some(id), Rep.Some(name), Rep.Some(path), Rep.Some(size), Rep.Some(amount), Rep.Some(`type`), Rep.Some(fieldId)).shaped.<>({r=>import r._; _1.map(_=> rMasterDataSet.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get, _7.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+    def ? = (Rep.Some(id), Rep.Some(name), Rep.Some(path), Rep.Some(size), Rep.Some(amount), Rep.Some(`type`), Rep.Some(fieldId), Rep.Some(privatePath)).shaped.<>({r=>import r._; _1.map(_=> rMasterDataSet.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get, _7.get, _8.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column id SqlType(bigserial), AutoInc, PrimaryKey */
     val id: Rep[Long] = column[Long]("id", O.AutoInc, O.PrimaryKey)
@@ -54,6 +55,8 @@ trait SlickTables {
     val `type`: Rep[Int] = column[Int]("type", O.Default(0))
     /** Database column field_id SqlType(int8), Default(0) */
     val fieldId: Rep[Long] = column[Long]("field_id", O.Default(0L))
+    /** Database column private_path SqlType(text), Default() */
+    val privatePath: Rep[String] = column[String]("private_path", O.Default(""))
   }
   /** Collection-like TableQuery object for table tMasterDataSet */
   lazy val tMasterDataSet = new TableQuery(tag => new tMasterDataSet(tag))
