@@ -15,6 +15,7 @@ public class Test {
         a.forEach((String s1) -> System.out.print(s));
         int[] aaa=  {1,2,3};
         Queue<Integer> q = new PriorityQueue<>();
+        a.get(1).split("");
     }
     public static int getResult(int n) {
         // write code here

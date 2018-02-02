@@ -1,6 +1,6 @@
 package thesis
 
-import java.io.{InputStreamReader, LineNumberReader}
+import java.io._
 
 import slick.dbio.{FlatMapAction, SequenceAction}
 import thesis.models.tables.SlickTables
@@ -8,31 +8,39 @@ import thesis.utils.DBUtil._
 import slick.jdbc.PostgresProfile.api._
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.io.Source
 /**
   * Created by liuziwei on 2017/11/3.
   */
-object Test {
-  private val tMission = SlickTables.tMasterMission
-  def main( args:Array[String]) {
-    aa
-  }
+object Test extends App{
 
-  def aa = {
-    val query = for{
-      a <- tMission.filter(_.id === 0l).map(_.status).result
-      b <- tMission ++= (1 to 10).map(i => SlickTables.rMasterMission(-1l))
-    }yield{
-      a
+    val file = new File("E:/workspace/test/textClassify/train-post-9.csv")
+  val in = new BufferedInputStream(new FileInputStream(file))
+  val ff = Source.fromFile(file).getLines().toList.map{s =>
+      val aa = s.split("\\|#\\|")
+      aa.map(a => "\""+a+"\"").mkString(",")
     }
-    val q1 = tMission ++= (1 to 10).map(i => SlickTables.rMasterMission(-1l))
-
-
-    query.transactionally match{
-      case SequenceAction(actions) =>
-        println(actions.length)
-      case FlatMapAction(_,_,_) =>
-        println("flatmap ")
-    }
+  val out = new OutputStreamWriter(new FileOutputStream(new File("E:/workspace/test/textClassify/train.csv")))
+  ff.foreach{f =>
+    out.write(f)
+    out.write("\r\n")
   }
-
+  out.close()
+}
+object Test1 extends App{
+  val cFile = new File("E:/研究生毕设/测试用模型/文本分类/board_classify_smth.txt")
+  val file = new File("E:/研究生毕设/测试用模型/文本分类/eval.txt")
+  val classify = Source.fromFile(cFile).getLines().toList.map(s => (s.split(" ")(0),s.split(" ")(1).toInt)).toMap
+  val ff = Source.fromFile(file).getLines().toList.flatMap{s =>
+    val aa = s.split("\\|#\\|")
+    val c = classify.get(aa(8))
+    if(c.isDefined && aa.length == 12) Some(aa.map(a => "\""+a+"\"").mkString(",")+","+c.get)
+    else None
+  }
+  val out = new OutputStreamWriter(new FileOutputStream(new File("E:/workspace/test/textClassify/train.csv")))
+  ff.foreach{f =>
+    out.write(f)
+    out.write("\r\n")
+  }
+  out.close()
 }
